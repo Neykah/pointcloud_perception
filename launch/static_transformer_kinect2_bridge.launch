@@ -1,0 +1,11 @@
+<launch>
+	<!-- Rotate the camera -->
+	<arg name="pi/2" value="1.5707963267948966"/>
+	<arg name="optical_rotate" value="0 0 0 -$(arg pi/2) 0 -$(arg pi/2)"/>
+	<node pkg="tf" type="static_transform_publisher" name="kinect2_base_link" args="$(arg optical_rotate) base_link kinect2_link 100" />
+
+	<!-- Launch kinect2_bridge with publish_tf:=true -->
+	<include file="$(find kinect2_bridge)/launch/kinect2_bridge.launch">
+		<arg name="publish_tf" value="true"/>
+	</include>
+</launch>
