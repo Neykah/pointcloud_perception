@@ -1,3 +1,5 @@
+#! /usr/bin/python
+
 import rospy
 from perception.mock_camera import MockCamera
 from sensor_msgs.msg import PointCloud2
@@ -31,7 +33,7 @@ def main():
         cloud.header.stamp = rospy.Time.now()
         pub.publish(cloud)
         rate.sleep()
-
+    
 
 if __name__ == '__main__':
     main()
