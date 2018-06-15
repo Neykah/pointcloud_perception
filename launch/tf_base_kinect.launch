@@ -1,0 +1,19 @@
+<launch>
+	<!-- Create a tf between the mobile base and the kinect,
+	     and launch rviz with the mobile base as fixed frame -->
+
+	<!-- Define a few variables -->
+	<arg name="rot_angle" default="1.570796327" />
+	<arg name="rot_x" default="$(arg rot_angle)" />
+	<arg name="rot_z" default="$(arg rot_angle)" />
+	<arg name="base_tf" default="base_footprint" />
+	<arg name="rviz" default="false" />
+
+	<!-- Create the tf -->
+	<node name="tf_base_kinect" pkg="tf" type="static_transform_publisher"
+		args="0 0 0 -$(arg rot_x) 0 -$(arg rot_z) $(arg base_tf) kinect2_link 100" />
+
+	<!-- Launch rviz -->
+	<node name="rviz" pkg="rviz" type="rviz" args="-f $(arg base_tf)" if="$(eval rviz == true)" />
+
+</launch>
