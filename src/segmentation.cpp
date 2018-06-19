@@ -32,8 +32,8 @@ namespace perception
     void SegmentSurface(PointCloudC::Ptr cloud, pcl::PointIndices::Ptr indices) 
     {
         double dist_thresh, tol_deg;
-        ros::param::get("/perception/seg_dist_threshold", dist_thresh);
-        ros::param::get("/perception/seg_tolerance_degree", tol_deg);
+        ros::param::param("/perception/seg_dist_threshold", dist_thresh, INLIER_DIST_THRESHOLD);
+        ros::param::param("/perception/seg_tolerance_degree", tol_deg, TOLERANCE_DEGREE);
         std::cout << "Input cloud has " << cloud->size() << " points" << std::endl;
         pcl::PointIndices indices_internal;
         pcl::SACSegmentation<PointC> seg;
@@ -56,7 +56,23 @@ namespace perception
         pcl::ModelCoefficients coeff;
         seg.segment(indices_internal, coeff);
 
-        *indices = indices_internal;
+        // Build custom indices that ignores points above the plane
+        double distance_above_plane;
+        ros::param::param("distance above plane", distance_above_plane, 0.005);
+        for (size_t i=0 ; i < cloud->size() ; i++)
+        {
+            const PointC& pt_i = cloud->points[i];
+            double value = coeff.values[0] * pt_i.x + coeff.values[1] * pt_i.y + 
+                           coeff.values[2] * pt_i.z + coeff.values[3];
+            if (value < distance_above_plane)
+            {
+                indices->indices.push_back(i);
+            }
+        }
+
+
+        // Commented out in to only keep indices above the plane
+        // *indices = indices_internal;
 
         if (indices->indices.size() == 0)
         {
@@ -88,10 +104,7 @@ namespace perception
 
     Segmenter::Segmenter(const ros::Publisher& surface_points_pub, const ros::Publisher& marker_pub)
         : surface_points_pub_(surface_points_pub), marker_pub_(marker_pub) 
-    {
-        ros::param::set("/perception/seg_dist_threshold", INLIER_DIST_THRESHOLD);
-        ros::param::set("/perception/seg_tolerance_degree", TOLERANCE_DEGREE);
-    }
+    {}
     
     void Segmenter::Callback(const sensor_msgs::PointCloud2& msg)
     {
