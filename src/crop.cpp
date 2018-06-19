@@ -18,7 +18,7 @@ void Cropper::Callback(const sensor_msgs::PointCloud2& msg) {
     ros::param::param("crop_min_x", min_x, -1.0);
     ros::param::param("crop_min_y", min_y, -1.0);
     ros::param::param("crop_min_z", min_z, 0.0);
-    ros::param::param("crop_max_x", max_x, 1.0);
+    ros::param::param("crop_max_x", max_x, 1.05);
     ros::param::param("crop_max_y", max_y, 1.0);
     ros::param::param("crop_max_z", max_z, 1.2);
     PointCloudC::Ptr cropped_cloud(new PointCloudC());

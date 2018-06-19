@@ -28,6 +28,10 @@ void GetAxisAlignedBoundingBox(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
 //    the identity. The position refers to the center of the box.
 //  dimensions: The output dimensions, in meters.
 
+void SegmentSurfaceObjects(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
+                           pcl::PointIndices::Ptr surface_indices,
+                           std::vector<pcl::PointIndices>* objects_indices);
+
 class Segmenter {
  public:
   Segmenter(const ros::Publisher&, const ros::Publisher&);

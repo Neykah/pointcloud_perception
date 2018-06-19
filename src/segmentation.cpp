@@ -21,7 +21,7 @@
 #include <iostream>
 
 // Parameter: distance threshold between a point and a plane to be considered inlier.
-#define INLIER_DIST_THRESHOLD 0.01
+#define INLIER_DIST_THRESHOLD 0.005
 #define TOLERANCE_DEGREE 10.0
 
 typedef pcl::PointXYZRGB PointC;
@@ -57,22 +57,23 @@ namespace perception
         seg.segment(indices_internal, coeff);
 
         // Build custom indices that ignores points above the plane
-        double distance_above_plane;
-        ros::param::param("distance above plane", distance_above_plane, 0.005);
-        for (size_t i=0 ; i < cloud->size() ; i++)
-        {
-            const PointC& pt_i = cloud->points[i];
-            double value = coeff.values[0] * pt_i.x + coeff.values[1] * pt_i.y + 
-                           coeff.values[2] * pt_i.z + coeff.values[3];
-            if (value < distance_above_plane)
-            {
-                indices->indices.push_back(i);
-            }
-        }
+        // double distance_above_plane;
+        // ros::param::param("distance_above_plane", distance_above_plane, 0.005);
+        // for (size_t i=0 ; i < indices_internal.indices.size() ; i++)
+        // {
+        //     const PointC& pt_i = cloud->points[indices_internal.indices[i]];
+        //     double value = coeff.values[0] * pt_i.x + coeff.values[1] * pt_i.y + 
+        //                    coeff.values[2] * pt_i.z + coeff.values[3];
+
+        //     if (value > distance_above_plane)
+        //     {
+        //         indices->indices.push_back(i);
+        //     }
+        // }
 
 
-        // Commented out in to only keep indices above the plane
-        // *indices = indices_internal;
+        // Commented out to only keep indices above the plane
+        *indices = indices_internal;
 
         if (indices->indices.size() == 0)
         {
@@ -80,6 +81,14 @@ namespace perception
             return;
         }
     }
+
+    void SegmentSurfaceObjects(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
+                               pcl::PointIndices::Ptr surface_indices,
+                               std::vector<pcl::PointIndices>* objects_indices)
+    {
+
+    }
+        
 
     void GetAxisAlignedBoundingBox(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
                                     geometry_msgs::Pose* pose,
