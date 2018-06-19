@@ -15,6 +15,9 @@
 #include "pcl/sample_consensus/model_types.h"
 #include "pcl/segmentation/sac_segmentation.h"
 
+// Euclidean Cluster Extraction
+#include "pcl/segmentation/extract_clusters.h"
+
 // PointCloud reification
 #include "pcl/filters/extract_indices.h"
 
@@ -82,10 +85,44 @@ namespace perception
     }
 
     void SegmentSurfaceObjects(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
-                               pcl::PointIndices::Ptr surface_indices,
-                               std::vector<pcl::PointIndices>* objects_indices)
+                               pcl::PointIndices::Ptr objects_pointcloud_indices,
+                               std::vector<pcl::PointIndices>* object_indices)
     {
+        ROS_INFO("There are %ld points above the table", objects_pointcloud_indices->indices.size());
 
+        double cluster_tolerance;
+        int min_cluster_size, max_cluster_size;
+        ros::param::param("ec_cluster_tolerance", cluster_tolerance, 0.01);
+        ros::param::param("ec_min_cluster_size", min_cluster_size, 300);
+        ros::param::param("ec_max_cluster_size", max_cluster_size, 10000);
+
+        pcl::EuclideanClusterExtraction<PointC> euclid;
+        euclid.setInputCloud(cloud);
+        euclid.setIndices(objects_pointcloud_indices);
+        euclid.setClusterTolerance(cluster_tolerance);
+        euclid.setMinClusterSize(min_cluster_size);
+        euclid.setMaxClusterSize(max_cluster_size);
+        euclid.extract(*object_indices);
+
+        // Find the size of the smallest and the largest object,
+        // where size = number of points in the cluster
+        size_t min_size = std::numeric_limits<size_t>::max();
+        size_t max_size = std::numeric_limits<size_t>::min();
+
+        for (size_t i=0 ; i < object_indices->size() ; i++)
+        {
+            size_t cluster_size = object_indices->at(i).indices.size();
+            if (cluster_size < min_size)
+            {
+                min_size = cluster_size;
+            }
+            if (cluster_size > max_size)
+            {
+                max_size = cluster_size;
+            }
+        }
+
+        ROS_INFO("Found %ld objects, min size: %ld, max_size: %ld", object_indices->size(), min_size, max_size);
     }
         
 
@@ -124,6 +161,8 @@ namespace perception
         pcl::PointIndices::Ptr table_inliers(new pcl::PointIndices());
         pcl::PointIndices::Ptr table_above(new pcl::PointIndices());
         SegmentSurface(cloud, table_inliers, table_above);
+        std::vector<pcl::PointIndices> object_indices;
+        SegmentSurfaceObjects(cloud, table_above, &object_indices);
 
         // Reify the pointclouds
         PointCloudC::Ptr table_cloud(new PointCloudC());
@@ -147,7 +186,7 @@ namespace perception
         pcl::toROSMsg(*objects_cloud, output_objects_cloud);
         objects_points_pub_.publish(output_objects_cloud);
 
-        // Creation of a bounding box and publication
+        // Creation of a bounding box for the table and publication
         visualization_msgs::Marker table_marker;
         table_marker.ns = "table";
         table_marker.header.frame_id = "base_link";
@@ -156,5 +195,29 @@ namespace perception
         table_marker.color.r = 1;
         table_marker.color.a = 0.8;
         marker_pub_.publish(table_marker);
+
+        // Creation of bounding boxes for each detected object and publication
+        for (size_t i=0 ; i < object_indices.size() ; i++)
+        {
+            // Reify indices into a pointcloud of the object
+            pcl::PointIndices::Ptr indices(new pcl::PointIndices);
+            *indices = object_indices[i];
+            PointCloudC::Ptr object_cloud(new PointCloudC());
+            pcl::ExtractIndices<PointC> extract_object;
+            extract_object.setInputCloud(cloud);
+            extract_object.setIndices(indices);
+            extract_object.filter(*object_cloud);
+
+            // Publish a bounding box around it
+            visualization_msgs::Marker object_marker;
+            object_marker.ns = "objects";
+            object_marker.id = i;
+            object_marker.header.frame_id = "base_link";
+            object_marker.type = visualization_msgs::Marker::CUBE;
+            GetAxisAlignedBoundingBox(object_cloud, &object_marker.pose, &object_marker.scale);
+            object_marker.color.g = 1;
+            object_marker.color.a = 0.4;
+            marker_pub_.publish(object_marker);
+        }
     }
 } //namespace perception

@@ -29,7 +29,6 @@ void GetAxisAlignedBoundingBox(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
 //  dimensions: The output dimensions, in meters.
 
 void SegmentSurfaceObjects(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
-                           pcl::PointIndices::Ptr surface_indices,
                            std::vector<pcl::PointIndices>* objects_indices);
 
 class Segmenter {
