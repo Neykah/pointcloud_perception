@@ -29,7 +29,7 @@ typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudC;
 
 namespace perception 
 {
-    void SegmentSurface(PointCloudC::Ptr cloud, pcl::PointIndices::Ptr indices) 
+    void SegmentSurface(PointCloudC::Ptr cloud, pcl::PointIndices::Ptr indices, pcl::PointIndices::Ptr indices_above) 
     {
         double dist_thresh, tol_deg;
         ros::param::param("/perception/seg_dist_threshold", dist_thresh, INLIER_DIST_THRESHOLD);
@@ -56,23 +56,22 @@ namespace perception
         pcl::ModelCoefficients coeff;
         seg.segment(indices_internal, coeff);
 
-        // Build custom indices that ignores points above the plane
-        // double distance_above_plane;
-        // ros::param::param("distance_above_plane", distance_above_plane, 0.005);
-        // for (size_t i=0 ; i < indices_internal.indices.size() ; i++)
-        // {
-        //     const PointC& pt_i = cloud->points[indices_internal.indices[i]];
-        //     double value = coeff.values[0] * pt_i.x + coeff.values[1] * pt_i.y + 
-        //                    coeff.values[2] * pt_i.z + coeff.values[3];
+        // Recover the set of points under the table
+        double distance_above_plane;
+        ros::param::param("distance_above_plane", distance_above_plane, 0.005);
+        for (size_t i=0 ; i < cloud->size() ; i++)
+        {
+            const PointC& pt_i = cloud->points[i];
+            double value = coeff.values[0] * pt_i.x + coeff.values[1] * pt_i.y + 
+                           coeff.values[2] * pt_i.z + coeff.values[3];
 
-        //     if (value > distance_above_plane)
-        //     {
-        //         indices->indices.push_back(i);
-        //     }
-        // }
+            if (value >= distance_above_plane)
+            {
+                indices_above->indices.push_back(i);
+            }
+        }
 
 
-        // Commented out to only keep indices above the plane
         *indices = indices_internal;
 
         if (indices->indices.size() == 0)
@@ -111,8 +110,9 @@ namespace perception
             dimensions->z = max_pcl.z - min_pcl.z;
         }
 
-    Segmenter::Segmenter(const ros::Publisher& surface_points_pub, const ros::Publisher& marker_pub)
-        : surface_points_pub_(surface_points_pub), marker_pub_(marker_pub) 
+    Segmenter::Segmenter(const ros::Publisher& surface_points_pub, const ros::Publisher& objects_points_pub, 
+                         const ros::Publisher& marker_pub)
+        : surface_points_pub_(surface_points_pub), objects_points_pub_(objects_points_pub), marker_pub_(marker_pub) 
     {}
     
     void Segmenter::Callback(const sensor_msgs::PointCloud2& msg)
@@ -122,19 +122,30 @@ namespace perception
 
         // Extract the indices corresponding to the table
         pcl::PointIndices::Ptr table_inliers(new pcl::PointIndices());
-        SegmentSurface(cloud, table_inliers);
+        pcl::PointIndices::Ptr table_above(new pcl::PointIndices());
+        SegmentSurface(cloud, table_inliers, table_above);
 
-        // Reify the pointcloud
+        // Reify the pointclouds
         PointCloudC::Ptr table_cloud(new PointCloudC());
         pcl::ExtractIndices<PointC> extract;
         extract.setInputCloud(cloud);
         extract.setIndices(table_inliers);
         extract.filter(*table_cloud);
 
+        PointCloudC::Ptr objects_cloud(new PointCloudC());
+        pcl::ExtractIndices<PointC> extract_above;
+        extract_above.setInputCloud(cloud);
+        extract_above.setIndices(table_above);
+        extract_above.filter(*objects_cloud);
+
         // Conversion to a PointCloud2 message and publication
-        sensor_msgs::PointCloud2 output_cloud;
-        pcl::toROSMsg(*table_cloud, output_cloud);
-        surface_points_pub_.publish(output_cloud);
+        sensor_msgs::PointCloud2 output_table_cloud;
+        pcl::toROSMsg(*table_cloud, output_table_cloud);
+        surface_points_pub_.publish(output_table_cloud);
+
+        sensor_msgs::PointCloud2 output_objects_cloud;
+        pcl::toROSMsg(*objects_cloud, output_objects_cloud);
+        objects_points_pub_.publish(output_objects_cloud);
 
         // Creation of a bounding box and publication
         visualization_msgs::Marker table_marker;

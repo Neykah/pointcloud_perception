@@ -15,7 +15,7 @@ namespace perception {
 //  indices: The indices of points in the point cloud that correspond to the
 //    surface. Empty if no surface was found.
 void SegmentSurface(pcl::PointCloud<pcl::PointXYZRGB>::Ptr,
-                    pcl::PointIndices::Ptr);
+                    pcl::PointIndices::Ptr, pcl::PointIndices::Ptr);
 
 void GetAxisAlignedBoundingBox(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
                                geometry_msgs::Pose* pose,
@@ -34,11 +34,12 @@ void SegmentSurfaceObjects(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
 
 class Segmenter {
  public:
-  Segmenter(const ros::Publisher&, const ros::Publisher&);
+  Segmenter(const ros::Publisher&, const ros::Publisher&, const ros::Publisher&);
   void Callback(const sensor_msgs::PointCloud2&);
 
  private:
   ros::Publisher surface_points_pub_;
+  ros::Publisher objects_points_pub_;
   ros::Publisher marker_pub_;
 };
 }  // namespace perception
