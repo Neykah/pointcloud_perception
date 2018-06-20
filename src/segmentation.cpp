@@ -35,8 +35,8 @@ namespace perception
     void SegmentSurface(PointCloudC::Ptr cloud, pcl::PointIndices::Ptr indices, pcl::PointIndices::Ptr indices_above) 
     {
         double dist_thresh, tol_deg;
-        ros::param::param("/perception/seg_dist_threshold", dist_thresh, INLIER_DIST_THRESHOLD);
-        ros::param::param("/perception/seg_tolerance_degree", tol_deg, TOLERANCE_DEGREE);
+        ros::param::param("seg_dist_threshold", dist_thresh, INLIER_DIST_THRESHOLD);
+        ros::param::param("seg_tolerance_degree", tol_deg, TOLERANCE_DEGREE);
         std::cout << "Input cloud has " << cloud->size() << " points" << std::endl;
         pcl::PointIndices indices_internal;
         pcl::SACSegmentation<PointC> seg;
