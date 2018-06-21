@@ -2,7 +2,7 @@
   <param name="ec_cluster_tolerance" value="0.03" />
   <param name="ec_min_cluster_size" value="700" />
   <param name="ec_max_cluster_size" value="10000" />
-  <param name="distance_above_plane" value="0.01" />
+  <param name="distance_above_plane" value="0.015" />
   <param name="crop_min_x" value="-1" />
   <param name="crop_min_y" value="-1" />
   <param name="crop_min_z" value="0" />
