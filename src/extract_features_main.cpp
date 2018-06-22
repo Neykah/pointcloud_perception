@@ -98,7 +98,7 @@ int main(int argc, char** argv)
     // perception::ExtractSizeFeatures(object, &features);
 
     // For color feature
-    perception::ExtractColorFeatures(object, &features);
+    perception::ExtractFeatures(object, &features);
 
     rosbag::Bag bag_out;
     bag_out.open(label + "_label.bag", rosbag::bagmode::Write);

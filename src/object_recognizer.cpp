@@ -64,7 +64,7 @@ ObjectRecognizer::ObjectRecognizer(const std::vector<ObjectFeatures>& dataset) :
 void ObjectRecognizer::Recognize(const Object& object, std::string* name, double* confidence)
 {
     perception_msgs::ObjectFeatures *features_input(new perception_msgs::ObjectFeatures);
-    perception::ExtractColorFeatures(object, features_input);
+    perception::ExtractFeatures(object, features_input);
 
     double min_distance = std::numeric_limits<double>::max();
     double second_min_distance = std::numeric_limits<double>::max();

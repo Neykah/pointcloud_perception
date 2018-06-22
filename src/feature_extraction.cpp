@@ -2,6 +2,7 @@
 
 #include <algorithm> // std::min and std::max
 
+#include "ros/ros.h"
 #include "perception/object.h"
 #include "perception_msgs/ObjectFeatures.h"
 
@@ -10,23 +11,19 @@ namespace perception {
 void ExtractSizeFeatures(const Object& object,
                          perception_msgs::ObjectFeatures* features)
 {
+    double weight;
+    ros::param::param("size_weight", weight, 2.0);
     // "x" dimension is always the smallest of x and y to account for rotations.
     // z always points up.
 
     features->names.push_back("box_dim_x");
+    features->values.push_back(
+        weight * std::min(object.dimensions.x, object.dimensions.y));
     features->names.push_back("box_dim_y");
-    if (object.dimensions.x <= object.dimensions.y)
-    {
-        features->values.push_back(object.dimensions.x);
-        features->values.push_back(object.dimensions.y);
-    }
-    else
-    {
-        features->values.push_back(object.dimensions.y);
-        features->values.push_back(object.dimensions.x);
-    }
+    features->values.push_back(
+        weight * std::max(object.dimensions.x, object.dimensions.y));
     features->names.push_back("box_dim_z");
-    features->values.push_back(object.dimensions.z);
+    features->values.push_back(weight * object.dimensions.z);
 }
 
 void ExtractColorFeatures(const Object& object,
@@ -51,5 +48,12 @@ void ExtractColorFeatures(const Object& object,
         color_features[i] /= object.cloud->size();
     }
     features->values.insert(features->values.end(), color_features.begin(), color_features.end());
+}
+
+void ExtractFeatures(const Object& object,
+                     perception_msgs::ObjectFeatures* features)
+{
+    ExtractSizeFeatures(object, features);
+    ExtractColorFeatures(object, features);
 }
 } // namespace perception
