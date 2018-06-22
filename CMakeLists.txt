@@ -154,11 +154,19 @@ target_link_libraries(perception_downsample ${catkin_LIBRARIES} ${PCL_COMMON_LIB
 
 add_library(perception_segmentation src/segmentation.cpp)
 add_dependencies(perception_segmentation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(perception_segmentation ${catkin_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES})
+target_link_libraries(perception_segmentation perception_feature_extraction
+                                              perception_object_recognizer 
+                                              ${catkin_LIBRARIES} 
+                                              ${PCL_COMMON_LIBRARIES} 
+                                              ${PCL_IO_LIBRARIES})
 
 add_library(perception_feature_extraction src/feature_extraction.cpp)
 add_dependencies(perception_feature_extraction ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(perception_feature_extraction ${catkin_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES})
+
+add_library(perception_object_recognizer src/object_recognizer.cpp)
+add_dependencies(perception_object_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(perception_object_recognizer ${catkin_LIBRARIES})
 
 # Declare executables
 
@@ -170,7 +178,11 @@ target_link_libraries(perception_save_cloud_main ${catkin_LIBRARIES})
 add_executable(perception_pointcloud_demo src/pointcloud_demo.cpp)
 set_target_properties(perception_pointcloud_demo PROPERTIES OUTPUT_NAME pointcloud_demo PREFIX "")
 add_dependencies(perception_pointcloud_demo ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(perception_pointcloud_demo perception_crop perception_downsample perception_segmentation ${catkin_LIBRARIES})
+target_link_libraries(perception_pointcloud_demo perception_crop 
+                                                 perception_downsample 
+                                                 perception_segmentation 
+                                                 perception_object_recognizer 
+                                                 ${catkin_LIBRARIES})
 
 add_executable(perception_publish_pcl_cloud src/publish_pcl_cloud.cpp)
 set_target_properties(perception_publish_pcl_cloud PROPERTIES OUTPUT_NAME publish_pcl_cloud PREFIX "")

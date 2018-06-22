@@ -1,4 +1,5 @@
 <launch>
+  <arg name="data_dir" /> 
   <param name="ec_cluster_tolerance" value="0.03" />
   <param name="ec_min_cluster_size" value="700" />
   <param name="ec_max_cluster_size" value="10000" />
@@ -12,7 +13,7 @@
 
   <node pkg="tf" type="static_transform_publisher" name="tf_static" args="0 0 0 0 0 0 base_link mock_point_cloud 100" />
 
-  <node pkg="perception" type="pointcloud_demo" name="point_cloud_demo" output="screen">
+  <node pkg="perception" type="pointcloud_demo" name="point_cloud_demo" args="$(arg data_dir)" output="screen">
     <remap from="cloud_in" to="mock_point_cloud" />
   </node>
 </launch>  

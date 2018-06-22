@@ -8,6 +8,9 @@
 
 #include "perception/object.h"
 
+// Object recognition
+#include "perception/object_recognizer.h"
+
 namespace perception {
 // Finds the largest horizontal surface in the given point cloud.
 // This is useful for adding a collision object to MoveIt.
@@ -42,10 +45,11 @@ void SegmentSurfaceObjects(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
 
 class Segmenter {
  public:
-  Segmenter(const ros::Publisher&);
+  Segmenter(const ros::Publisher&, const ObjectRecognizer&);
   void Callback(const sensor_msgs::PointCloud2&);
 
  private:
   ros::Publisher marker_pub_;
+  ObjectRecognizer recognizer_;
 };
 }  // namespace perception
