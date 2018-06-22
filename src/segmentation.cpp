@@ -155,7 +155,6 @@ namespace perception
 
     void SegmentTabletopScene(PointCloudC::Ptr cloud, std::vector<Object>* objects)
     {
-        // Same as callback, but with visualisation code removed
         // Extract the indices corresponding to the surface
         pcl::PointIndices::Ptr table_inliers(new pcl::PointIndices());
         pcl::PointIndices::Ptr table_above(new pcl::PointIndices());
